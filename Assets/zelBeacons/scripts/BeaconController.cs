@@ -6,6 +6,8 @@ using VRC.Udon;
 
 public class BeaconController : UdonSharpBehaviour
 {
+    public bool showBeacons = true;//boolean for toggling beacons on/off locally
+
     [Tooltip("Empty Prefab to instantiate when needed")]
     public GameObject empty;
 
@@ -14,6 +16,7 @@ public class BeaconController : UdonSharpBehaviour
     [Tooltip("Name of Player to tie the Blue Beacon to (ex: world creator)")]
     public string worldCreator;
     private VRCPlayerApi blueOwner;//VRCPlayerApi object to tie to the blue owner
+    private string blueName = "";//populates if the Blue Owner is in the instance
 
     [Tooltip("Green Beacon that follows the players named in [AdminNamesParent]")]
     public Transform beaconGreen;
@@ -21,6 +24,7 @@ public class BeaconController : UdonSharpBehaviour
     [Tooltip("Red Beacon that follows the World Master (oldest user in instance)")]
     public Transform beaconRed;
     private VRCPlayerApi redOwner;//VRCPlayerApi object to tie to the red owner
+    private string redName = "";//populates if the Red Owner is in the instance
 
     private float updateTimer = 0;//time remaining until next heavy update
     [Tooltip("Time in seconds of each timer iteration (0.5 - 1.0 recommended)")]
@@ -123,7 +127,20 @@ public class BeaconController : UdonSharpBehaviour
                     {
                         targetPos = playerID.GetPosition();
                     }
-                    greenAdminTargets.GetChild(i).position = new Vector3(targetPos.x, targetPos.y + 0.5f, targetPos.z);
+                    float verticalOffset = 0.5f;
+                    if (playerName == redName)
+                    {
+                        verticalOffset += 0.5f;
+                    }
+                    if (playerName == blueName)
+                    {
+                        verticalOffset += 0.5f;
+                    }
+                    for (int j=0; j<greenAdminTargets.childCount; j++)
+                    {
+                        Transform greenAdminTargetID = greenAdminTargets.GetChild(j);
+                        greenAdminTargetID.position = new Vector3(targetPos.x, targetPos.y + verticalOffset, targetPos.z);
+                    }
                 }
             }
             greenAdminPos += 1;
@@ -148,7 +165,6 @@ public class BeaconController : UdonSharpBehaviour
                 Transform greenAdminTarget = greenAdminTargets.GetChild(i);
                 Transform greenAdminID = greenAdminParent.GetChild(i);
                 Vector3 targetPosition = Vector3.Lerp(greenAdminID.position, greenAdminTarget.position, greenTargetSmoothing);
-                //greenAdminID.position = new Vector3(targetPosition.x, targetPosition.y + 0.5f, targetPosition.z);
                 greenAdminID.position = targetPosition;
             }
             
@@ -162,6 +178,14 @@ public class BeaconController : UdonSharpBehaviour
             GameObject greenBeacon = Instantiate(beaconGreen.gameObject);
             greenBeacon.transform.SetParent(greenAdminParent);
             greenBeacon.name = greenAdminID.gameObject.name;
+            if (showBeacons)
+            {
+
+            }
+            else
+            {
+                greenBeacon.SetActive(false);
+            }
 
         }
         if (greenAdminsToRemove.childCount > 0)
@@ -199,7 +223,12 @@ public class BeaconController : UdonSharpBehaviour
             {
                 redHeadPosition = redOwner.GetPosition();
             }
-            Vector3 plumbobRedPosition = new Vector3(redHeadPosition.x, redHeadPosition.y + 0.5f, redHeadPosition.z);
+            float verticalOffset = 0.5f;
+            if (redOwner.displayName == blueName)
+            {
+                verticalOffset += 0.5f;
+            }
+            Vector3 plumbobRedPosition = new Vector3(redHeadPosition.x, redHeadPosition.y + verticalOffset, redHeadPosition.z);
             beaconRed.transform.position = Vector3.Lerp(beaconRed.transform.position, plumbobRedPosition, blueAndRedTargetSmoothing);
         }
         else
@@ -216,10 +245,12 @@ public class BeaconController : UdonSharpBehaviour
         if (isMaster)
         {
             redOwner = player;
+            redName = player.displayName;
         }
         if (worldCreator == player.displayName)
         {
             blueOwner = player;
+            blueName = player.displayName;
         }
         for (int i = 0; i < adminNamesParent.childCount; i++)
         {
@@ -251,6 +282,7 @@ public class BeaconController : UdonSharpBehaviour
         }
         if (redOwner.displayName == player.displayName)
         {
+            redName = "";
             VRCPlayerApi[] playerList = new VRCPlayerApi[VRCPlayerApi.GetPlayerCount()];
             foreach (VRCPlayerApi otherPlayer in playerList)
             {
@@ -262,7 +294,44 @@ public class BeaconController : UdonSharpBehaviour
         }
         if (player.displayName == worldCreator)
         {
+            blueName = "";
             blueOwner = null;
+        }
+    }
+
+    public override void Interact()
+    {
+        base.Interact();
+        toggleBeacons();
+    }
+
+    public void toggleBeacons()
+    {
+        if (showBeacons)
+        {
+            showBeacons = false;
+            beaconRed.gameObject.SetActive(false);
+            beaconBlue.gameObject.SetActive(false);
+            if (greenAdminParent.childCount > 0)
+            {
+                for(int i=0; i<greenAdminParent.childCount; i++)
+                {
+                    greenAdminParent.gameObject.SetActive(false);
+                }
+            }
+        }
+        else
+        {
+            showBeacons = true;
+            beaconRed.gameObject.SetActive(true);
+            beaconBlue.gameObject.SetActive(true);
+            if (greenAdminParent.childCount > 0)
+            {
+                for (int i = 0; i < greenAdminParent.childCount; i++)
+                {
+                    greenAdminParent.gameObject.SetActive(true);
+                }
+            }
         }
     }
 }
