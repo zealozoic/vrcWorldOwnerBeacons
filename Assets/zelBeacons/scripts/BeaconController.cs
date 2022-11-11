@@ -48,6 +48,11 @@ public class BeaconController : UdonSharpBehaviour
     [Tooltip("Smoothing for Master and World Creator Beacons. Default = 0.02")]
     public float blueAndRedTargetSmoothing = 0.02f;
 
+    [Tooltip("How far above the head the beacon floats. Default = 0.5")]
+    public float distanceAboveHead = 0.5f;
+    [Tooltip("How far each beacon spaces each other when they overlap. Default = 0.5")]
+    public float beaconSpacing = 0.5f;
+
     private void Start()
     {
         //if updatetimer is less than 0.1, may cause severe stuttering. Recommended is still 0.5 - 1.0
@@ -96,7 +101,7 @@ public class BeaconController : UdonSharpBehaviour
             {
                 blueHeadPosition = blueOwner.GetPosition();
             }
-            Vector3 plumbobBluePosition = new Vector3(blueHeadPosition.x, blueHeadPosition.y + 0.5f, blueHeadPosition.z);
+            Vector3 plumbobBluePosition = new Vector3(blueHeadPosition.x, blueHeadPosition.y + distanceAboveHead, blueHeadPosition.z);
             beaconBlue.transform.position = Vector3.Lerp(beaconBlue.transform.position, plumbobBluePosition, blueAndRedTargetSmoothing);
         }
         else
@@ -127,20 +132,25 @@ public class BeaconController : UdonSharpBehaviour
                     {
                         targetPos = playerID.GetPosition();
                     }
-                    float verticalOffset = 0.5f;
+                    float verticalOffset = distanceAboveHead;
                     if (playerName == redName)
                     {
-                        verticalOffset += 0.5f;
+                        verticalOffset += beaconSpacing;
                     }
                     if (playerName == blueName)
                     {
-                        verticalOffset += 0.5f;
+                        verticalOffset += beaconSpacing;
                     }
                     for (int j=0; j<greenAdminTargets.childCount; j++)
                     {
                         Transform greenAdminTargetID = greenAdminTargets.GetChild(j);
-                        greenAdminTargetID.position = new Vector3(targetPos.x, targetPos.y + verticalOffset, targetPos.z);
+                        if (playerName == greenAdminTargetID.gameObject.name)
+                        {
+                            greenAdminTargetID.position = new Vector3(targetPos.x, targetPos.y + verticalOffset, targetPos.z);
+                            break;
+                        }
                     }
+                    
                 }
             }
             greenAdminPos += 1;
@@ -223,10 +233,10 @@ public class BeaconController : UdonSharpBehaviour
             {
                 redHeadPosition = redOwner.GetPosition();
             }
-            float verticalOffset = 0.5f;
+            float verticalOffset = distanceAboveHead;
             if (redOwner.displayName == blueName)
             {
-                verticalOffset += 0.5f;
+                verticalOffset += beaconSpacing;
             }
             Vector3 plumbobRedPosition = new Vector3(redHeadPosition.x, redHeadPosition.y + verticalOffset, redHeadPosition.z);
             beaconRed.transform.position = Vector3.Lerp(beaconRed.transform.position, plumbobRedPosition, blueAndRedTargetSmoothing);
