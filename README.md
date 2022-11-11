@@ -39,8 +39,11 @@ Currently, there are three different beacons configured to hover over users:
   - Green Admins To Add: A list of admins that have joined the world and need their Green Beacons (and Targets) instantiated.
   - Green Target Smoothing: how quickly the Green Beacons move towards their target location. (lower values will be smoother and slower).
   - Blue and Red Target Smoothing: how quickly the Blue and Red Beacons move towards their target location. (lower values will be smoother and slower).
+  - Distance Above Head: How far above the head the beacon floats. Default = 0.5"
+  - Beacon Spacing: How far each beacon spaces each other when they overlap.
 
-![image](https://user-images.githubusercontent.com/115526707/201248907-ccd6d4c0-18f7-4f84-98d4-8d97cddf220e.png)
+![image](https://user-images.githubusercontent.com/115526707/201279495-5cb68363-9a9f-4ca8-a4a9-3d4ad224d3ce.png)
+
 
 
 # How it works
