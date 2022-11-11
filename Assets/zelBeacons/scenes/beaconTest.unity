@@ -570,6 +570,16 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 8737956936719191776, guid: e8904ebf8dcb7224da14f325c41f6202,
+        type: 3}
+      propertyPath: _syncMethod
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8737956936719191777, guid: e8904ebf8dcb7224da14f325c41f6202,
+        type: 3}
+      propertyPath: updateTimerLength
+      value: 0.1
+      objectReference: {fileID: 0}
     - target: {fileID: 8737956936719191777, guid: e8904ebf8dcb7224da14f325c41f6202,
         type: 3}
       propertyPath: serializationData.Prefab

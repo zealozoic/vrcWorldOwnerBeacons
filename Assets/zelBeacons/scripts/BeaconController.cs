@@ -60,7 +60,7 @@ public class BeaconController : UdonSharpBehaviour
 
         //Quick and simple method to disable the "Admin Menu Parent" GameObject when the local player's name is listed in Admin names list.
         VRCPlayerApi localPlayer = Networking.LocalPlayer;
-        for (int i = 0; i < adminNamesParent.childCount - 1; i++)
+        for (int i = 0; i < adminNamesParent.childCount; i++)
         {
             string adminName = adminNamesParent.GetChild(i).gameObject.name;
             if (adminName == localPlayer.displayName)
@@ -68,7 +68,7 @@ public class BeaconController : UdonSharpBehaviour
                 adminMenuParent.SetActive(false);
             }
         }
-
+        setBeacons(showBeacons);
     }
     private void Update()
     {
@@ -150,7 +150,7 @@ public class BeaconController : UdonSharpBehaviour
                             break;
                         }
                     }
-                    
+                    break;
                 }
             }
             greenAdminPos += 1;
@@ -290,15 +290,17 @@ public class BeaconController : UdonSharpBehaviour
                 }
             }
         }
-        if (redOwner.displayName == player.displayName)
+        if (redName == player.displayName)
         {
             redName = "";
-            VRCPlayerApi[] playerList = new VRCPlayerApi[VRCPlayerApi.GetPlayerCount()];
             foreach (VRCPlayerApi otherPlayer in playerList)
             {
-                if (otherPlayer.isMaster)
-                {
-                    redOwner = otherPlayer;
+                if (Utilities.IsValid(otherPlayer)){
+                    if (otherPlayer.isMaster)
+                    {
+                        redOwner = otherPlayer;
+                        redName = otherPlayer.displayName;
+                    }
                 }
             }
         }
@@ -320,27 +322,23 @@ public class BeaconController : UdonSharpBehaviour
         if (showBeacons)
         {
             showBeacons = false;
-            beaconRed.gameObject.SetActive(false);
-            beaconBlue.gameObject.SetActive(false);
-            if (greenAdminParent.childCount > 0)
-            {
-                for(int i=0; i<greenAdminParent.childCount; i++)
-                {
-                    greenAdminParent.gameObject.SetActive(false);
-                }
-            }
         }
         else
         {
             showBeacons = true;
-            beaconRed.gameObject.SetActive(true);
-            beaconBlue.gameObject.SetActive(true);
-            if (greenAdminParent.childCount > 0)
+        }
+        setBeacons(showBeacons);
+    }
+
+    public void setBeacons(bool enabled)
+    {
+        beaconRed.gameObject.SetActive(enabled);
+        beaconBlue.gameObject.SetActive(enabled);
+        if (greenAdminParent.childCount > 0)
+        {
+            for (int i = 0; i < greenAdminParent.childCount; i++)
             {
-                for (int i = 0; i < greenAdminParent.childCount; i++)
-                {
-                    greenAdminParent.gameObject.SetActive(true);
-                }
+                greenAdminParent.gameObject.SetActive(enabled);
             }
         }
     }
