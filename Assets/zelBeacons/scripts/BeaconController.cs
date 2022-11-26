@@ -53,6 +53,10 @@ public class BeaconController : UdonSharpBehaviour
     [Tooltip("How far each beacon spaces each other when they overlap. Default = 0.5")]
     public float beaconSpacing = 0.5f;
 
+    int greenAdminPos = -1;//position in the list of players when iterating over the green admins
+    VRCPlayerApi[] playerList;//list of players in the instance, updated when needed
+    int playerCount = 0;//number of players in the instance
+
     private void Start()
     {
         //if updatetimer is less than 0.1, may cause severe stuttering. Recommended is still 0.5 - 1.0
@@ -110,6 +114,13 @@ public class BeaconController : UdonSharpBehaviour
         }
     }
 
+    private void PopulatePlayerList()
+    {
+        playerCount = VRCPlayerApi.GetPlayerCount();
+        playerList = new VRCPlayerApi[playerCount];
+        VRCPlayerApi.GetPlayers(playerList);
+    }
+
     private void UpdateBeaconGreenTargets()
     {
         if (greenAdminTargets.childCount > 0)
@@ -117,53 +128,56 @@ public class BeaconController : UdonSharpBehaviour
             if (greenAdminPos == -1)
             {
                 greenAdminPos = 0;
-                playerList = new VRCPlayerApi[VRCPlayerApi.GetPlayerCount()];
-                playerList = VRCPlayerApi.GetPlayers(playerList);
+                PopulatePlayerList();
             }
+
+            int userCountTen = Mathf.Max(1,Mathf.RoundToInt(playerCount / 8) * 8);
             
-            VRCPlayerApi playerID = playerList[greenAdminPos];
-            string playerName = playerID.displayName;
-            for(int i=0; i<adminNamesParent.childCount; i++)
+            while(userCountTen > 0)
             {
-                if (playerName == adminNamesParent.GetChild(i).gameObject.name)
+                userCountTen -= 1;
+                VRCPlayerApi playerID = playerList[greenAdminPos];
+                string playerName = playerID.displayName;
+                for (int i = 0; i < adminNamesParent.childCount; i++)
                 {
-                    Vector3 targetPos = playerID.GetBonePosition(HumanBodyBones.Head);
-                    if (targetPos.sqrMagnitude < 0.01f)
+                    if (playerName == adminNamesParent.GetChild(i).gameObject.name)
                     {
-                        targetPos = playerID.GetPosition();
-                    }
-                    float verticalOffset = distanceAboveHead;
-                    if (playerName == redName)
-                    {
-                        verticalOffset += beaconSpacing;
-                    }
-                    if (playerName == blueName)
-                    {
-                        verticalOffset += beaconSpacing;
-                    }
-                    for (int j=0; j<greenAdminTargets.childCount; j++)
-                    {
-                        Transform greenAdminTargetID = greenAdminTargets.GetChild(j);
-                        if (playerName == greenAdminTargetID.gameObject.name)
+                        Vector3 targetPos = playerID.GetBonePosition(HumanBodyBones.Head);
+                        if (targetPos.sqrMagnitude < 0.01f)
                         {
-                            greenAdminTargetID.position = new Vector3(targetPos.x, targetPos.y + verticalOffset, targetPos.z);
-                            break;
+                            targetPos = playerID.GetPosition();
                         }
+                        float verticalOffset = distanceAboveHead;
+                        if (playerName == redName)
+                        {
+                            verticalOffset += beaconSpacing;
+                        }
+                        if (playerName == blueName)
+                        {
+                            verticalOffset += beaconSpacing;
+                        }
+                        for (int j = 0; j < greenAdminTargets.childCount; j++)
+                        {
+                            Transform greenAdminTargetID = greenAdminTargets.GetChild(j);
+                            if (playerName == greenAdminTargetID.gameObject.name)
+                            {
+                                greenAdminTargetID.position = new Vector3(targetPos.x, targetPos.y + verticalOffset, targetPos.z);
+                                break;
+                            }
+                        }
+                        break;
                     }
+                }
+                greenAdminPos += 1;
+                if (greenAdminPos > playerList.Length - 1)
+                {
+                    greenAdminPos = 0;
                     break;
                 }
-            }
-            greenAdminPos += 1;
-            if (greenAdminPos > playerList.Length - 1)
-            {
-                greenAdminPos = 0;
             }
 
         }
     }
-
-    int greenAdminPos = -1;
-    VRCPlayerApi[] playerList;
 
     private void UpdateBeaconGreen()
     {
@@ -293,9 +307,15 @@ public class BeaconController : UdonSharpBehaviour
         if (redName == player.displayName)
         {
             redName = "";
+            if (playerCount == 0)
+            {
+                Debug.Log("calling populate playerlist from inside OnPlayerLeft");
+                PopulatePlayerList();
+            }
             foreach (VRCPlayerApi otherPlayer in playerList)
             {
-                if (Utilities.IsValid(otherPlayer)){
+                if (Utilities.IsValid(otherPlayer))
+                {
                     if (otherPlayer.isMaster)
                     {
                         redOwner = otherPlayer;
@@ -309,6 +329,7 @@ public class BeaconController : UdonSharpBehaviour
             blueName = "";
             blueOwner = null;
         }
+
     }
 
     public override void Interact()
