@@ -32,8 +32,13 @@ public class BeaconController : UdonSharpBehaviour
 
     [Tooltip("Parent GameObject holding a list of other GameObjects that detail the UserNames of each admin")]
     public Transform adminNamesParent;
-    [Tooltip("A GameObject that disables itself when you are listed in the [Admin Names Parent] list")]
-    public GameObject adminMenuParent;
+    [Tooltip("A list of GameObjects that disables themselves when you are listed in the [Admin Names Parent] list")]
+    public GameObject[] adminDisableObjects;
+    [Tooltip("A list of GameObjects that enable themselves when you are listed in the [Admin Names Parent] list")]
+    public GameObject[] adminEnableObjects;
+    [Tooltip("Toggle for allowing the instance owner (red Beacon) to be included in the list of admins")]
+    public bool instanceOwnerIsAdmin;
+
     [Tooltip("A GameObject that holds all Admin Beacons")]
     public Transform greenAdminParent;
     [Tooltip("A GameObject that holds a list of the Target Locations for each Admin object")]
@@ -53,6 +58,7 @@ public class BeaconController : UdonSharpBehaviour
     [Tooltip("How far each beacon spaces each other when they overlap. Default = 0.5")]
     public float beaconSpacing = 0.5f;
 
+    VRCPlayerApi localPlayer;
     int greenAdminPos = -1;//position in the list of players when iterating over the green admins
     VRCPlayerApi[] playerList;//list of players in the instance, updated when needed
     int playerCount = 0;//number of players in the instance
@@ -63,13 +69,13 @@ public class BeaconController : UdonSharpBehaviour
         updateTimerLength = Mathf.Max(0.1f, updateTimerLength);
 
         //Quick and simple method to disable the "Admin Menu Parent" GameObject when the local player's name is listed in Admin names list.
-        VRCPlayerApi localPlayer = Networking.LocalPlayer;
+        localPlayer = Networking.LocalPlayer;
         for (int i = 0; i < adminNamesParent.childCount; i++)
         {
             string adminName = adminNamesParent.GetChild(i).gameObject.name;
             if (adminName == localPlayer.displayName)
             {
-                adminMenuParent.SetActive(false);
+                setAdminObjects();
             }
         }
         setBeacons(showBeacons);
@@ -320,6 +326,10 @@ public class BeaconController : UdonSharpBehaviour
                     {
                         redOwner = otherPlayer;
                         redName = otherPlayer.displayName;
+                        if (redName == localPlayer.displayName)
+                        {
+                            setAdminObjects();
+                        }
                     }
                 }
             }
@@ -330,6 +340,30 @@ public class BeaconController : UdonSharpBehaviour
             blueOwner = null;
         }
 
+    }
+
+    public void setAdminObjects()
+    {
+        if (adminDisableObjects.Length > 0)
+        {
+            for (int j = 0; j < adminDisableObjects.Length; j++)
+            {
+                if (adminDisableObjects[j] != null)
+                {
+                    adminDisableObjects[j].SetActive(false);
+                }
+            }
+        }
+        if (adminEnableObjects.Length > 0)
+        {
+            for (int j = 0; j < adminEnableObjects.Length; j++)
+            {
+                if (adminEnableObjects[j] != null)
+                {
+                    adminEnableObjects[j].SetActive(true);
+                }
+            }
+        }
     }
 
     public override void Interact()
