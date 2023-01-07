@@ -276,6 +276,10 @@ public class BeaconController : UdonSharpBehaviour
         {
             redOwner = player;
             redName = player.displayName;
+            if (instanceOwnerIsAdmin && redName == localPlayer.displayName)
+            {
+                setAdminObjects();
+            }
         }
         if (worldCreator == player.displayName)
         {
@@ -326,7 +330,7 @@ public class BeaconController : UdonSharpBehaviour
                     {
                         redOwner = otherPlayer;
                         redName = otherPlayer.displayName;
-                        if (redName == localPlayer.displayName)
+                        if (instanceOwnerIsAdmin && redName == localPlayer.displayName)
                         {
                             setAdminObjects();
                         }
